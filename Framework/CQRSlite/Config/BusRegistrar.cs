@@ -5,26 +5,26 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CQRSlite.Config
 {
     public class BusRegistrar
     {
-        private readonly IServiceLocator _serviceLocator;
+        private readonly IServiceProvider _serviceProvider;
 
-        public BusRegistrar(IServiceLocator serviceLocator)
+        public BusRegistrar(IServiceProvider serviceProvider)
         {
-            if (serviceLocator == null)
+            if (serviceProvider == null)
             {
-                throw new ArgumentNullException(nameof(serviceLocator));
+                throw new ArgumentNullException(nameof(serviceProvider));
             }
-
-            _serviceLocator = serviceLocator;
+            _serviceProvider = serviceProvider;
         }
 
         public void Register(params Type[] typesFromAssemblyContainingMessages)
         {
-            var bus = _serviceLocator.GetService<IHandlerRegistrar>();
+            var bus = _serviceProvider.GetService<IHandlerRegistrar>();
 
             foreach (var typesFromAssemblyContainingMessage in typesFromAssemblyContainingMessages)
             {
@@ -59,7 +59,7 @@ namespace CQRSlite.Config
 
             var del = new Action<dynamic>(x =>
             {
-                dynamic handler = _serviceLocator.GetService(executorType);
+                dynamic handler = _serviceProvider.GetService(executorType);
                 handler.Handle(x);
             });
 

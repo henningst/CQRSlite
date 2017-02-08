@@ -20,7 +20,6 @@
     "Microsoft.Extensions.Logging.Debug": "1.0.0",
     "Microsoft.VisualStudio.Web.BrowserLink.Loader": "14.0.0",
     "CQRSCode": "1.0.0-*",
-    "Scrutor": "1.10.0",
     "CQRSlite": "0.11.0",
     "SaasKit.Multitenancy": "1.1.4"
   },

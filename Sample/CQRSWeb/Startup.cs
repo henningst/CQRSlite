@@ -16,6 +16,7 @@ using CQRSCode.WriteModel.Handlers;
 using Scrutor;
 using System.Reflection;
 using System.Linq;
+using CQRSCode;
 using CQRSCode.Multitenancy;
 using CQRSWeb.Multitenancy;
 
@@ -36,29 +37,15 @@ namespace CQRSWeb
             services.AddSingleton<IEventPublisher>(y => y.GetService<InProcessBus>());
             services.AddSingleton<IHandlerRegistrar>(y => y.GetService<InProcessBus>());
             services.AddScoped<ISession, Session>();
-            services.AddSingleton<IEventStore, InMemoryEventStore>();
+            services.AddScoped<IEventStore, InMemoryEventStore>();
             services.AddScoped<ICache, CQRSlite.Cache.MemoryCache>();
             services.AddScoped<IRepository>(y => new CacheRepository(new Repository(y.GetService<IEventStore>()), y.GetService<IEventStore>(), y.GetService<ICache>()));
-
+            //services.AddSingleton<BusRegistrar>(BusRegistrarFactory);
             services.AddTransient<IReadModelFacade, ReadModelFacade>();
 
             //Scan for commandhandlers and eventhandlers
-            services.Scan(scan => scan
-                .FromAssemblies(typeof(InventoryCommandHandlers).GetTypeInfo().Assembly)
-                    .AddClasses(classes => classes.Where(x => {
-                        var allInterfaces = x.GetInterfaces();
-                        return 
-                            allInterfaces.Any(y => y.GetTypeInfo().IsGenericType && y.GetTypeInfo().GetGenericTypeDefinition() == typeof(ICommandHandler<>)) ||
-                            allInterfaces.Any(y => y.GetTypeInfo().IsGenericType && y.GetTypeInfo().GetGenericTypeDefinition() == typeof(IEventHandler<>));
-                    }))
-                    .AsSelf()
-                    .WithTransientLifetime()
-            );
+            services.AddCQRSlite();
 
-            //Register bus
-            var serviceProvider = services.BuildServiceProvider();
-            var registrar = new BusRegistrar(new DependencyResolver(serviceProvider));
-            registrar.Register(typeof(InventoryCommandHandlers));
 
             // Add framework services.
             services.AddMvc();
