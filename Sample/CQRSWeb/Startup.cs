@@ -17,7 +17,9 @@ using Scrutor;
 using System.Reflection;
 using System.Linq;
 using CQRSCode.Multitenancy;
-using CQRSWeb.Multitenancy;
+using Microsoft.AspNetCore.Http;
+using ISession = CQRSlite.Domain.ISession;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace CQRSWeb
 {
@@ -26,7 +28,8 @@ namespace CQRSWeb
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMultitenancy<Tenant, TenantResolver>();
+            services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddScoped<Tenant>(TenantFactory);
 
             services.AddMemoryCache();
 
@@ -36,7 +39,7 @@ namespace CQRSWeb
             services.AddSingleton<IEventPublisher>(y => y.GetService<InProcessBus>());
             services.AddSingleton<IHandlerRegistrar>(y => y.GetService<InProcessBus>());
             services.AddScoped<ISession, Session>();
-            services.AddScoped<IEventStore, InMemoryEventStore>();
+            services.AddSingleton<IEventStore, InMemoryEventStore>();
             services.AddScoped<ICache, CQRSlite.Cache.MemoryCache>();
             services.AddScoped<IRepository>(y => new CacheRepository(new Repository(y.GetService<IEventStore>()), y.GetService<IEventStore>(), y.GetService<ICache>()));
 
@@ -64,12 +67,17 @@ namespace CQRSWeb
             services.AddMvc();
         }
 
+        private Tenant TenantFactory(IServiceProvider serviceProvider)
+        {
+            var context = serviceProvider.GetService<IHttpContextAccessor>();
+            var tenantNameFromQUeryString = context?.HttpContext.Request.Query.Keys.FirstOrDefault() ?? "Default";
+            return new Tenant() { Name = tenantNameFromQUeryString};
+        }
+
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddConsole(LogLevel.Debug);
-
-            app.UseMultitenancy<Tenant>();
 
             app.UseDeveloperExceptionPage();
             app.UseStaticFiles();
@@ -80,8 +88,6 @@ namespace CQRSWeb
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
-
-            app.UseMiddleware<TenantMiddlewareLogger>();
         }
     }
 }

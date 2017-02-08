@@ -3,6 +3,7 @@ using CQRSCode.WriteModel.Commands;
 using CQRSlite.Commands;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using CQRSCode.Multitenancy;
 
 namespace CQRSWeb.Controllers
 {
@@ -11,7 +12,7 @@ namespace CQRSWeb.Controllers
         private readonly ICommandSender _commandSender;
         private readonly IReadModelFacade _readmodel;
 
-        public HomeController(ICommandSender commandSender, IReadModelFacade readmodel)
+        public HomeController(ICommandSender commandSender, IReadModelFacade readmodel, Tenant tenant)
         {
             _readmodel = readmodel;
             _commandSender = commandSender;
