@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CQRSCode.Multitenancy;
 using CQRSlite.Events;
 
 namespace CQRSCode.WriteModel
@@ -8,11 +9,13 @@ namespace CQRSCode.WriteModel
     public class InMemoryEventStore : IEventStore
     {
         private readonly IEventPublisher _publisher;
+        private readonly Tenant _tenant;
         private readonly Dictionary<Guid, List<IEvent>> _inMemoryDb = new Dictionary<Guid, List<IEvent>>();
 
-        public InMemoryEventStore(IEventPublisher publisher)
+        public InMemoryEventStore(IEventPublisher publisher, Tenant tenant)
         {
             _publisher = publisher;
+            _tenant = tenant;
         }
 
         public void Save<T>(IEnumerable<IEvent> events)

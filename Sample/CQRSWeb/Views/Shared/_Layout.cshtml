@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@using CQRSCode.Multitenancy
+@inject Tenant CurrentTenant
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -15,7 +17,12 @@
         <section id="main">
             @RenderBody()
         </section>
-        <footer></footer>
+        <footer>
+            <hr/>
+
+            <b>Current Tenant:</b> @CurrentTenant.Name
+
+        </footer>
     </div>
 </body>
 </html>
