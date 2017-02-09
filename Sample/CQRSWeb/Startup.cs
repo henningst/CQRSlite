@@ -30,6 +30,8 @@ namespace CQRSWeb
         {
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<Tenant>(TenantFactory);
+            //services.AddScoped<Tenant>(provider => new Tenant() { Name = "Test"});
+
 
             services.AddMemoryCache();
 
@@ -38,8 +40,9 @@ namespace CQRSWeb
             services.AddSingleton<ICommandSender>(y => y.GetService<InProcessBus>());
             services.AddSingleton<IEventPublisher>(y => y.GetService<InProcessBus>());
             services.AddSingleton<IHandlerRegistrar>(y => y.GetService<InProcessBus>());
+            services.AddSingleton<BusRegistrar>();
             services.AddScoped<ISession, Session>();
-            services.AddSingleton<IEventStore, InMemoryEventStore>();
+            services.AddScoped<IEventStore, InMemoryEventStore>();
             services.AddScoped<ICache, CQRSlite.Cache.MemoryCache>();
             services.AddScoped<IRepository>(y => new CacheRepository(new Repository(y.GetService<IEventStore>()), y.GetService<IEventStore>(), y.GetService<ICache>()));
 
@@ -58,20 +61,26 @@ namespace CQRSWeb
                     .WithTransientLifetime()
             );
 
-            //Register bus
-            var serviceProvider = services.BuildServiceProvider();
-            var registrar = new BusRegistrar(new DependencyResolver(serviceProvider));
-            registrar.Register(typeof(InventoryCommandHandlers));
+
+            // Register command handlers
+            services.BuildServiceProvider().GetService<BusRegistrar>().Register(typeof(InventoryCommandHandlers));
 
             // Add framework services.
             services.AddMvc();
         }
 
+        //private BusRegistrar BusRegistrarFactory(IServiceProvider serviceProvider)
+        //{
+        //    var busRegistrar = new BusRegistrar(serviceProvider);
+        //    return busRegistrar;
+        //}
+
         private Tenant TenantFactory(IServiceProvider serviceProvider)
         {
             var context = serviceProvider.GetService<IHttpContextAccessor>();
-            var tenantNameFromQUeryString = context?.HttpContext.Request.Query.Keys.FirstOrDefault() ?? "Default";
-            return new Tenant() { Name = tenantNameFromQUeryString};
+            var tenantNameFromQUeryString = context?.HttpContext?.Request.Host.Host ?? "Default";
+            return new Tenant() { Name = tenantNameFromQUeryString };
+            //return new Tenant() { Name = "From factory"};
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

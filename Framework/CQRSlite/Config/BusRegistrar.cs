@@ -10,21 +10,23 @@ namespace CQRSlite.Config
 {
     public class BusRegistrar
     {
-        private readonly IServiceLocator _serviceLocator;
+        private readonly IServiceProvider _services;
+        private readonly IHandlerRegistrar _handlerRegistrar;
 
-        public BusRegistrar(IServiceLocator serviceLocator)
+        public BusRegistrar(IServiceProvider services, IHandlerRegistrar handlerRegistrar)
         {
-            if (serviceLocator == null)
+            if (services == null)
             {
-                throw new ArgumentNullException(nameof(serviceLocator));
+                throw new ArgumentNullException(nameof(services));
             }
 
-            _serviceLocator = serviceLocator;
+            _services = services;
+            _handlerRegistrar = handlerRegistrar;
         }
 
         public void Register(params Type[] typesFromAssemblyContainingMessages)
         {
-            var bus = _serviceLocator.GetService<IHandlerRegistrar>();
+            
 
             foreach (var typesFromAssemblyContainingMessage in typesFromAssemblyContainingMessages)
             {
@@ -38,13 +40,13 @@ namespace CQRSlite.Config
                 {
                     foreach (var @interface in executorType.Interfaces)
                     {
-                        InvokeHandler(@interface, bus, executorType.Type);
+                        RegisterHandler(@interface, _handlerRegistrar, executorType.Type);
                     }
                 }
             }
         }
 
-        private void InvokeHandler(Type @interface, IHandlerRegistrar bus, Type executorType)
+        private void RegisterHandler(Type @interface, IHandlerRegistrar bus, Type executorType)
         {
             var commandType = @interface.GetGenericArguments()[0];
 
@@ -59,7 +61,7 @@ namespace CQRSlite.Config
 
             var del = new Action<dynamic>(x =>
             {
-                dynamic handler = _serviceLocator.GetService(executorType);
+                dynamic handler = _services.GetService(executorType);
                 handler.Handle(x);
             });
 

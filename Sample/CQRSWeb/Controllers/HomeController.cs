@@ -11,10 +11,12 @@ namespace CQRSWeb.Controllers
     {
         private readonly ICommandSender _commandSender;
         private readonly IReadModelFacade _readmodel;
+        private readonly Tenant _tenant;
 
         public HomeController(ICommandSender commandSender, IReadModelFacade readmodel, Tenant tenant)
         {
             _readmodel = readmodel;
+            _tenant = tenant;
             _commandSender = commandSender;
         }
 

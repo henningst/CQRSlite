@@ -3,6 +3,7 @@ using CQRSlite.Events;
 using CQRSlite.Messages;
 using System;
 using System.Collections.Generic;
+using CQRSlite.Config;
 
 namespace CQRSlite.Bus
 {

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using CQRSlite.Bus;
-using CQRSlite.Config;
 
 namespace CQRSlite.Tests.Substitutes
 {
-    public class TestServiceLocator : IServiceLocator
+    public class TestServiceProvider : IServiceProvider
     {
         public readonly List<dynamic> Handlers = new List<dynamic>();
         public T GetService<T>()
@@ -15,20 +13,20 @@ namespace CQRSlite.Tests.Substitutes
 
         public object GetService(Type type)
         {
-            if(type == typeof(IHandlerRegistrar))
-                return new TestHandleRegistrar();
             if (type == typeof(TestAggregateDidSomethingHandler))
             {
                 var handler = new TestAggregateDidSomethingHandler();
                 Handlers.Add(handler);
                 return handler;
             }
-            else
+            if (type == typeof(TestAggregateDoSomethingHandler) || type == typeof(TestAggregateDoSomethingElseHandler))
             {
                 var handler = new TestAggregateDoSomethingHandler();
                 Handlers.Add(handler);
                 return handler;
             }
+
+            throw new ArgumentException($"I don't know how to resolve {type}");
         }
     }
 }

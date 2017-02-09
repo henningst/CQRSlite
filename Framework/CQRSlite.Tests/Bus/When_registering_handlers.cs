@@ -7,13 +7,13 @@ namespace CQRSlite.Tests.Bus
 {
     public class When_registering_handlers
     {
-        private BusRegistrar _register;
-        private TestServiceLocator _locator;
+        private readonly BusRegistrar _register;
+        private readonly TestServiceProvider _provider;
 
         public When_registering_handlers()
         {
-            _locator = new TestServiceLocator();
-            _register = new BusRegistrar(_locator);
+            _provider = new TestServiceProvider();
+            _register = new BusRegistrar(_provider, new TestHandleRegistrar());
             if (TestHandleRegistrar.HandlerList.Count == 0)
                 _register.Register(GetType());
         }
@@ -32,7 +32,7 @@ namespace CQRSlite.Tests.Bus
                 var @event = Activator.CreateInstance(item.Type);
                 item.Handler(@event);
             }
-            foreach (var handler in _locator.Handlers)
+            foreach (var handler in _provider.Handlers)
             {
                 Assert.Equal(1, handler.TimesRun);
             }
